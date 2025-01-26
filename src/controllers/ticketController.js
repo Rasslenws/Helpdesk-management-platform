@@ -158,7 +158,7 @@ exports.assignAgentToTicket = async (req, res) => {
 
     await ticket.save(); // Save the updated ticket
 
-    return res.status(200).json({ message: "Ticket assigned successfully", ticket });
+    return res.status(200).json({ message: "Ticket assigned successfully" });
 
   } catch (error) {
     return res.status(500).json({ error: error.message });

@@ -71,11 +71,11 @@ const Role = roleModel(sequelizeConfig, Sequelize);
 User.belongsTo(Role, { foreignKey: "RoleId"});
 Role.hasMany(User, { foreignKey: "RoleId" });
 
-User.hasMany(Ticket, { foreignKey: "UserId" });
-Ticket.belongsTo(User, { foreignKey: "UserId"});
+User.hasMany(Ticket, { foreignKey: "EmployeeId" });
+Ticket.belongsTo(User, { foreignKey: "EmployeeId"});
 
-// User.hasMany(Ticket, { foreignKey: "UserId" });
-// Ticket.belongsTo(User, { foreignKey: "UserId"});
+User.hasMany(Ticket, { foreignKey: "AssignedToId" });
+Ticket.belongsTo(User, { foreignKey: "AssignedToId"});
 
 User.hasMany(Notification, { foreignKey: "UserId" });
 Notification.belongsTo(User, { foreignKey: "UserId" });

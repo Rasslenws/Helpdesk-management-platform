@@ -8,6 +8,5 @@ app.put("/api/UpdateTicket/:TicketId", ticketcontroller.updateTicket);
 app.delete("/api/DeleteTicket/:TicketId", ticketcontroller.deleteTicket);
 app.post("/api/AssignTicket/:TicketId/assign/:UserId", ticketcontroller.assignAgentToTicket);
 
-
   
 };
