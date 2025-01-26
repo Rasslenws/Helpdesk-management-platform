@@ -74,6 +74,9 @@ Role.hasMany(User, { foreignKey: "RoleId" });
 User.hasMany(Ticket, { foreignKey: "UserId" });
 Ticket.belongsTo(User, { foreignKey: "UserId"});
 
+// User.hasMany(Ticket, { foreignKey: "UserId" });
+// Ticket.belongsTo(User, { foreignKey: "UserId"});
+
 User.hasMany(Notification, { foreignKey: "UserId" });
 Notification.belongsTo(User, { foreignKey: "UserId" });
 

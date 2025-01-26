@@ -6,10 +6,7 @@ app.get("/api/AllTickets", ticketcontroller.getAllTickets);
 app.get("/api/Ticket/:TicketId", ticketcontroller.getTicketById);
 app.put("/api/UpdateTicket/:TicketId", ticketcontroller.updateTicket);
 app.delete("/api/DeleteTicket/:TicketId", ticketcontroller.deleteTicket);
-app.patch("/api/AssignTicket/:TicketId/assign", ticketcontroller.assignTicket);
-
-
-
+app.post("/api/AssignTicket/:TicketId/assign/:UserId", ticketcontroller.assignAgentToTicket);
 
 
   

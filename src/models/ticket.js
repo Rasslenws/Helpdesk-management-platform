@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
           },
           Status: {
             type: Sequelize.STRING,
-            defaultValue: "open",
+            defaultValue: "Closed",
           },
           Priority: {
             type: Sequelize.STRING,
@@ -33,7 +33,7 @@ module.exports = (sequelize, Sequelize) => {
     
           AssignedTo: {
             type: Sequelize.STRING,
-            allowNull: true, // Par défaut non assigné
+            allowNull: false, // Par défaut non assigné
           },
           
       },
