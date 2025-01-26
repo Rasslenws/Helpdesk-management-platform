@@ -1,8 +1,8 @@
-const Ticket = require("../models/ticket");
-const User = require("../models/user");
+const { User ,Ticket } = require("../db/index.js");
+
 
 // Créer un nouveau ticket
-exports.createTicket = async (req, res) => {
+exports.createTickets = async (req, res) => {
   try {
     const { Title, Description, Priority, AssignedTo, Category } = req.body;
     if (!Title) {
@@ -26,19 +26,15 @@ exports.createTicket = async (req, res) => {
 // Récupérer tous les tickets
 exports.getAllTickets = async (req, res) => {
   try {
-    const { status, priority, category,UserId } = req.query;
+    const { status, priority, category, UserId } = req.query;
 
     //filtrage 
     const condition = {}; // Initialize an empty 'condition' object
 
-    if (status) 
-        condition.Status = status;
-    if (priority)
-         condition.Priority = priority;
-    if (category)
-         condition.Category = category;
-    if (UserId) 
-        condition.AssignedTo = UserId;
+    if (status) condition.Status = status;
+    if (priority) condition.Priority = priority;
+    if (category) condition.Category = category;
+    if (UserId) condition.AssignedTo = UserId;
 
     const tickets = await Ticket.findAll({ where: condition }); // récupérer tous les tickets
     res.status(200).json(tickets);
@@ -50,11 +46,11 @@ exports.getAllTickets = async (req, res) => {
 // Récupérer un ticket par ID
 exports.getTicketById = async (req, res) => {
   try {
-    const { id } = req.params; // object contains the route parameters from the URL of the request
-    const ticket = await Ticket.findByPk(id);
+    const { TicketId } = req.params; // object contains the route parameters from the URL of the request
+    const ticket = await Ticket.findByPk(TicketId);
 
     if (!ticket) {
-      return res.status(404).json({ message: `Ticket with ID ${id} not found.` });  // `` create a dynamic string
+      return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });  // `` create a dynamic string
     }
 
     res.status(200).json(ticket);
@@ -66,20 +62,20 @@ exports.getTicketById = async (req, res) => {
 // Mettre à jour un ticket
 exports.updateTicket = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { TicketId } = req.params;
     const { Title, Description, Status, Priority, AssignedTo, Category } = req.body;
 
     //retourne un tableau avec le nombre de lignes affectées par la mise à jour (if updated=1 if not updated=0)
     const [updated] = await Ticket.update(
-        { Title: Title, Description: Description, Status: Status, Priority: Priority, AssignedTo: AssignedTo, Category: Category },
-        { where: { TicketId: id } }
+        { Title, Description, Status, Priority, AssignedTo, Category },
+        { where: { TicketId } }
     );
 
     if (!updated) {
-      return res.status(404).json({ message: `Ticket with ID ${id} not found.` });
+      return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });
     }
 
-    const updatedTicket = await Ticket.findByPk(id);
+    const updatedTicket = await Ticket.findByPk(TicketId);
     res.status(200).json(updatedTicket);
   } catch (error) {
     res.status(500).json({ message: "Error updating ticket." });
@@ -89,11 +85,11 @@ exports.updateTicket = async (req, res) => {
 // Supprimer un ticket
 exports.deleteTicket = async (req, res) => {
   try {
-    const { id } = req.params;
-    const deleted = await Ticket.destroy({ where: { TicketId: id } });
+    const { TicketId } = req.params;
+    const deleted = await Ticket.destroy({ where: { TicketId } });
 
     if (!deleted) {
-      return res.status(404).json({ message: `Ticket with ID ${id} not found.` });
+      return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });
     }
 
     res.status(200).json({ message: "Ticket deleted successfully." });
@@ -105,7 +101,7 @@ exports.deleteTicket = async (req, res) => {
 // Réassigner un ticket à un agent
 exports.assignTicket = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { TicketId } = req.params;
     const { AssignedTo } = req.body;
 
     if (!AssignedTo) {
@@ -119,15 +115,15 @@ exports.assignTicket = async (req, res) => {
 
     const [updated] = await Ticket.update(
       { AssignedTo : AssignedTo },
-      { where: { TicketId: id } }
+      { where: { TicketId } }
     );
 
 
     if (!updated) {
-      return res.status(404).json({ message: `Ticket with ID ${id} not found.` });
+      return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });
     }
 
-    const updatedTicket = await Ticket.findByPk(id);
+    const updatedTicket = await Ticket.findByPk(TicketId);
     res.status(200).json(updatedTicket);
   } catch (error) {
     res.status(500).json({ message:  "Error assigning ticket." });

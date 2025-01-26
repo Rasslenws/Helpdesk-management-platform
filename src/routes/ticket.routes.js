@@ -1,23 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const ticketController = require('../controllers/ticketController');
+const ticketcontroller = require("../controllers/ticketController");
 
-// Créer un nouveau ticket
-router.post('/api/tickets', ticketController.createTicket);
+module.exports = (app) => {
+app.post("/api/addticket", ticketcontroller.createTickets);
+app.get("/api/AllTickets", ticketcontroller.getAllTickets);
+app.get("/api/Ticket/:TicketId", ticketcontroller.getTicketById);
+app.put("/api/UpdateTicket/:TicketId", ticketcontroller.updateTicket);
+app.delete("/api/DeleteTicket/:TicketId", ticketcontroller.deleteTicket);
+app.patch("/api/AssignTicket/:TicketId/assign", ticketcontroller.assignTicket);
 
-// Récupérer tous les tickets
-router.get('/api/tickets', ticketController.getAllTickets);
 
-// Récupérer un ticket par ID
-router.get('/api/tickets/:id', ticketController.getTicketById);
 
-// Mettre à jour un ticket
-router.put('/api/tickets/:id', ticketController.updateTicket);
 
-// Supprimer un ticket
-router.delete('/api/tickets/:id', ticketController.deleteTicket);
 
-// Réassigner un ticket à un agent
-router.put('/api/tickets/:id/assign', ticketController.assignTicket);
-
-module.exports = router;
+  
+};
