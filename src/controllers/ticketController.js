@@ -1,89 +1,138 @@
-const { User ,Ticket, Role } = require("../db/index.js");
+const { User, Ticket, Category, Role } = require("../db/index.js");
 
-// Créer un nouveau ticket
+// Create a new category through TicketController
+exports.createCategory = async (req, res) => {
+  try {
+    const { Name } = req.body;
+
+    // Validate input
+    if (!Name) {
+      return res.status(400).json({ message: "Category Name is required." });
+    }
+
+    // Create the category
+    const category = await Category.create({ Name });
+
+    res.status(201).json({message: "Category created successfully."});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error creating category."});
+  }
+};
+
+// Create a new ticket
 exports.createTickets = async (req, res) => {
   try {
-    const { Title, Description, Priority, Category, UserId } = req.body;
+    const { Title, Description, Priority, CategoryId, EmployeeId } = req.body;
 
-    // Check if the Title is provided
-    if (!Title) {
-      return res.status(400).json({ message: "Title is required" });
+    // Check if required fields are provided
+    if (!Title || !EmployeeId || !CategoryId) {
+      return res.status(400).json({ message: "Title, EmployeeId, and CategoryId are required" });
     }
 
-    // Step 1: Retrieve the 'admin' role from the Role model
+    // Check if the Category exists
+    const category = await Category.findByPk(CategoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Find an admin user to assign the ticket by default
     const adminRole = await Role.findOne({ where: { RoleName: "admin" } });
+    const adminUser = adminRole ? await User.findOne({ where: { RoleId: adminRole.RoleId } }) : null;
 
-    if (!adminRole) {
-      return res.status(404).json({ message: "Admin role not found" });
-    }
-    
-    // Step 2: Find a user with the 'admin' role
-    const adminUser = await User.findOne({ where: { RoleId: adminRole.RoleId } });
-
-    if (!adminUser) {
-      return res.status(404).json({ message: "Admin user not found" });
-    }
-
-    // Step 3: Create the ticket and assign it to the admin user by default
+    // Create the ticket
     const ticket = await Ticket.create({
-      UserId,
       Title,
       Description,
       Priority: Priority || "medium",
-      Category: Category || "General",
+      CategoryId,
+      EmployeeId,
       Status: "Closed",
-      AssignedTo: adminUser.Login,  // Assign the admin user to the ticket
+      AssignedToId: adminUser ? adminUser.UserId : null, // Assign to admin if available
     });
 
-    // Respond with the created ticket
-    res.status(201).json(ticket);
-
+    res.status(201).json({message : "Ticket successfully created"});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating ticket." });
   }
 };
 
-
-// Récupérer tous les tickets
+// Get all tickets
 exports.getAllTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.findAll(); // récupérer tous les tickets
-    if (tickets) {
-      res.status(200).json({ message: "All Tickets", tickets });   
+    const tickets = await Ticket.findAll({
+      include: [
+        {
+          model: User,
+          as: "employee",
+          attributes: ["Login"],
+        },
+        {
+          model: User,
+          as: "assignedTo",
+          attributes: ["Login"],
+        },
+        {
+          model: Category,
+          attributes: ["Name"],
+        },
+      ],
+    });
+
+    if (tickets.length === 0) {
+      return res.status(404).json({ message: "No tickets in database" });
     }
-    else{ 
-      return res.status(404).json({ message: "No Tickets in DataBase" });
-    }
-    
+
+    res.status(200).json({ message: "All Tickets", tickets });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error retrieving tickets." });
   }
 };
 
-// Récupérer un ticket par ID
+// Get a ticket by ID
 exports.getTicketById = async (req, res) => {
   try {
-    const { TicketId } = req.params; // object contains the route parameters from the URL of the request
-    const ticket = await Ticket.findByPk(TicketId);
+    const { TicketId } = req.params;
+
+    const ticket = await Ticket.findByPk(TicketId, {
+      include: [
+        {
+          model: User,
+          as: "employee",
+          attributes: ["Login"],
+        },
+        {
+          model: User,
+          as: "assignedTo",
+          attributes: ["Login"],
+        },
+        {
+          model: Category,
+          attributes: ["Name"],
+        },
+      ],
+    });
 
     if (!ticket) {
-      return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });  // `` create a dynamic string
+      return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });
     }
 
     res.status(200).json(ticket);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error retrieving ticket." });
   }
 };
 
-
+// Update a ticket
 exports.updateTicket = async (req, res) => {
   try {
     const { TicketId } = req.params;
-    const { Status, Title, Description, Priority, AssignedTo, Category } = req.body;
+    const { Status, Title, Description, Priority, CategoryId, } = req.body;
 
-    // Only allow status changes to open, in-progress, resolved, or closed
+    // Only allow status changes to valid values
     const validStatuses = ["Open", "Resolved", "in-progress", "Closed"];
     if (Status && !validStatuses.includes(Status)) {
       return res.status(400).json({ message: "Invalid status value" });
@@ -95,19 +144,24 @@ exports.updateTicket = async (req, res) => {
       return res.status(404).json({ message: `Ticket with ID ${TicketId} not found.` });
     }
 
-    // Update ticket fields (only fields that are provided in the request body)
+    // Check if the new CategoryId exists
+    if (CategoryId) {
+      const category = await Category.findByPk(CategoryId);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+    }
+
+    // Update ticket fields
     const updatedTicket = await ticket.update({
-      Title: Title || ticket.Title,       // Keep existing title if not provided
-      Description: Description || ticket.Description, // Keep existing description if not provided
-      Status: Status || ticket.Status,     // Keep existing status if not provided
-      Priority: Priority || ticket.Priority, // Keep existing priority if not provided
-      AssignedTo: AssignedTo || ticket.AssignedTo, // Keep existing assigned user if not provided
-      Category: Category || ticket.Category // Keep existing category if not provided
+      Title: Title || ticket.Title,
+      Description: Description || ticket.Description,
+      Status: Status || ticket.Status,
+      Priority: Priority || ticket.Priority,
+      CategoryId: CategoryId || ticket.CategoryId,
     });
 
-    // Respond with the updated ticket
-    res.status(200).json(updatedTicket);
-
+    res.status(200).json({message: "Ticket successfully updated"});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error updating ticket." });
@@ -115,11 +169,11 @@ exports.updateTicket = async (req, res) => {
 };
 
 
-
-// Delete  ticket
+// Delete a ticket
 exports.deleteTicket = async (req, res) => {
   try {
     const { TicketId } = req.params;
+
     const deleted = await Ticket.destroy({ where: { TicketId } });
 
     if (!deleted) {
@@ -128,42 +182,38 @@ exports.deleteTicket = async (req, res) => {
 
     res.status(200).json({ message: "Ticket deleted successfully." });
   } catch (error) {
-    res.status(500).json({ message:  "Error deleting ticket." });
+    console.error(error);
+    res.status(500).json({ message: "Error deleting ticket." });
   }
 };
 
 
-
-// Assign agent to a ticket
+// Assign an agent to a ticket
 exports.assignAgentToTicket = async (req, res) => {
   try {
-    const { TicketId, UserId } = req.params; 
+    const { TicketId, UserId } = req.params;
 
-    // Find the ticket by its ID
+    // Find the ticket
     const ticket = await Ticket.findByPk(TicketId);
     if (!ticket) {
-      return res.status(404).json({ error: "Ticket not found" });
+      return res.status(404).json({ message: "Ticket not found" });
     }
 
-    // Find the user by UserId
+    // Find the user
     const user = await User.findByPk(UserId);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Assign the user's login (username) to the ticket's AssignedTo field
-    ticket.AssignedTo = user.Login; 
-    ticket.UserId = UserId; // Keep UserId for reference
+    // Assign the user to the ticket
+    ticket.AssignedToId = user.UserId;
     ticket.Status = "in-progress"; // Change status to in-progress when assigned
 
-    await ticket.save(); // Save the updated ticket
+    await ticket.save();
 
-    return res.status(200).json({ message: "Ticket assigned successfully" });
-
+    res.status(200).json({ message: "Ticket assigned successfully." });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Error assigning agent to ticket." });
   }
 };
-
-
-

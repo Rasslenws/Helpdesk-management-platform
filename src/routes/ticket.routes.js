@@ -1,6 +1,7 @@
 const ticketcontroller = require("../controllers/ticketController");
 
 module.exports = (app) => {
+app.post("/api/addCategorie", ticketcontroller.createCategory);
 app.post("/api/addticket", ticketcontroller.createTickets);
 app.get("/api/AllTickets", ticketcontroller.getAllTickets);
 app.get("/api/Ticket/:TicketId", ticketcontroller.getTicketById);

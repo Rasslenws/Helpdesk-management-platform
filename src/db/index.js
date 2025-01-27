@@ -6,6 +6,8 @@ const userModel = require("../models/user");
 const roleModel = require("../models/role");
 const ticketModel = require("../models/ticket");
 const notificationModel = require("../models/notification");
+const cartegoryModel= require("../models/category");
+
 
 
 
@@ -61,6 +63,8 @@ const Ticket = ticketModel(sequelizeConfig, Sequelize);
 const Notification = notificationModel(sequelizeConfig, Sequelize);
 const User = userModel(sequelizeConfig, Sequelize);
 const Role = roleModel(sequelizeConfig, Sequelize);
+const Category = cartegoryModel(sequelizeConfig, Sequelize);
+
 
 
 
@@ -72,10 +76,14 @@ User.belongsTo(Role, { foreignKey: "RoleId"});
 Role.hasMany(User, { foreignKey: "RoleId" });
 
 User.hasMany(Ticket, { foreignKey: "EmployeeId" });
-Ticket.belongsTo(User, { foreignKey: "EmployeeId"});
+Ticket.belongsTo(User, { foreignKey: "EmployeeId", as: "employee" });
 
 User.hasMany(Ticket, { foreignKey: "AssignedToId" });
-Ticket.belongsTo(User, { foreignKey: "AssignedToId"});
+Ticket.belongsTo(User, { foreignKey: "AssignedToId", as: "assignedTo" });
+
+Category.hasMany(Ticket, { foreignKey: "CategoryId" });
+Ticket.belongsTo(Category, { foreignKey: "CategoryId" });
+
 
 User.hasMany(Notification, { foreignKey: "UserId" });
 Notification.belongsTo(User, { foreignKey: "UserId" });
@@ -85,7 +93,7 @@ Notification.belongsTo(User, { foreignKey: "UserId" });
 
 main();
 module.exports = {
-  User,Role, Ticket, Notification,
+  User,Role, Ticket, Notification,Category,
   sequelizeConfig,
   Sequelize
 };

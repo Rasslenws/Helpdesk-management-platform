@@ -1,6 +1,28 @@
 const { User ,Role } = require("../db/index.js");
 const bcrypt = require("bcryptjs");
 
+exports.createRole = async (req, res) => {
+  try {
+    const { RoleName } = req.body;
+
+    // Check if RoleName is provided
+    if (!RoleName) {
+      return res.status(400).json({ message: "RoleName is required" });
+    }
+
+    // Create the new role
+    const newRole = await Role.create({
+      RoleName,
+    });
+
+    // Return the created role
+    res.status(201).json({ message: "Role created successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error creating role" });
+  }
+};
+
 exports.addEmployee = async (req, res) => {
     try {
       const { Login, Email, Password } = req.body;  //Extraction des donnees de la requete
@@ -36,7 +58,6 @@ exports.addEmployee = async (req, res) => {
 
   }
 
-  // addAdmin
   exports.addAdmin= async (req, res) => {
     try {
       const { Login, Email, Password } = req.body; // Extraction des donnees de la requete
@@ -61,7 +82,7 @@ exports.addEmployee = async (req, res) => {
         Login: Login,
         Email: Email,
         Password: hashedPassword,
-        RoleName: role.RoleName,
+        RoleId: role.RoleId,
       });
   
       res.status(201).json({ message: "Admin successfully created" });
@@ -94,7 +115,7 @@ exports.addEmployee = async (req, res) => {
         Login: Login,
         Email: Email,
         Password: hashedPassword,
-        RoleName: role.RoleName,
+        RoleId: role.RoleId,
       });
   
       res.status(201).json({ message: "Support team member successfully created" });
@@ -196,7 +217,6 @@ exports.addEmployee = async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   };
-  
   
   
 
