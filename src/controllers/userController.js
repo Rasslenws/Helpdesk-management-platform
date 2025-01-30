@@ -58,7 +58,7 @@ exports.addEmployee = async (req, res) => {
 
   }
 
-  exports.addAdmin= async (req, res) => {
+ exports.addAdmin= async (req, res) => {
     try {
       const { Login, Email, Password } = req.body; // Extraction des donnees de la requete
   
@@ -132,7 +132,6 @@ exports.addEmployee = async (req, res) => {
   
       // Find the user by email 
       const user = await User.findOne({ where: { Email } });
-  
       if (!user) {
         return res.status(404).json({ message: "Employee not found" });
       }

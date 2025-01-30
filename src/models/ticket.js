@@ -25,20 +25,8 @@ module.exports = (sequelize, Sequelize) => {
       },
       AssignedToId: {
         type: Sequelize.INTEGER,
-        references: {
-          model: 'users',
-          key: 'UserId'
-        },
         allowNull: false,
-      },
-      EmployeeId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'users',  // Référence à la table 'users'
-          key: 'UserId',   // Clé primaire de la table 'users'
-        },
-        allowNull: false,  // L'ID de l'employé est obligatoire
-      },
+      }
     },
     {
       timestamps: true,
